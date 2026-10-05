@@ -12,13 +12,14 @@ export async function providerFailure(response,provider='vertex'){
  const fields=[...new Set(violations.map(v=>typeof v.field==='string'?v.field:'').flatMap(field=>['responseSchema','responseJsonSchema','thinkingConfig','maxOutputTokens','contents','systemInstruction'].filter(name=>field.toLowerCase().replaceAll('_','').includes(name.toLowerCase()))))];
  let category='request';
  // The Gemini API reports an invalid key as HTTP 400, not 401.
- if(provider==='gemini'&&/api key/.test(message))category='key';
+ if(provider==='gemini'&&(response.status===402||/prepay(?:ment)? credits|prepaid.*(?:depleted|balance)|payment required/.test(message)))category='billing';
+ else if(provider==='gemini'&&/api key/.test(message))category='key';
  else if(/schema|enum|constraint|too many states/.test(message)||fields.some(f=>/schema/i.test(f)))category='schema';
  else if(/thinking|thinking_level|thinkingbudget/.test(message)||fields.includes('thinkingConfig'))category='thinking';
  else if(/max.?output.?tokens|token limit/.test(message)||fields.includes('maxOutputTokens'))category='output-limit';
  else if(/model|location|region/.test(message))category='model';
  const specific={key:labels[401],schema:`${labels.name} rejected the structured-output schema. Check the backend response schema.`,thinking:`${labels.name} rejected the thinking configuration for this model. Check the backend thinking level.`,'output-limit':`${labels.name} rejected the output token limit. Check the backend generation limit.`,model:labels.model,request:`${labels.name} rejected the request parameters. Check the backend request format.`};
  const messages={401:labels[401],403:labels[403],429:`${labels.name} is busy or its quota has been reached. Please try again later.`,400:specific[category],404:labels[404]};
- return {message:messages[response.status]||`${labels.name} could not complete this request. Please try again.`,diagnostic:{provider,httpStatus:response.status,category,fields}};
+ return {message:category==='billing'?'AI design suggestions are temporarily unavailable. You can still build your ring from specifications.':messages[response.status]||`${labels.name} could not complete this request. Please try again.`,diagnostic:{provider,httpStatus:response.status,category,fields}};
 }
 export const vertexFailure=response=>providerFailure(response,'vertex');

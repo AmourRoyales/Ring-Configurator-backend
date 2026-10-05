@@ -34,7 +34,7 @@ export async function recommend({text,signal,generate,reportFailure,provider='ve
  if(!response.ok){
   const failure=await providerFailure(response,provider);
   reportFailure?.(failure.diagnostic);
-  throw new RecommendationError(failure.message,response.status===429?429:502);
+  throw new RecommendationError(failure.message,failure.diagnostic.category==='billing'?503:response.status===429?429:502);
  }
  const body=await response.json(),candidate=body.candidates?.[0];
  if(candidate?.finishReason!=='STOP')throw new RecommendationError('The design response was incomplete. Please try again with a little more detail.');
