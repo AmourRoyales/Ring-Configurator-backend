@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 export const PROJECT_ROOT=fileURLToPath(new URL('../../../',import.meta.url));
 export const DEFAULT_MODEL='gemini-3.1-pro-preview';
-export const GEMINI_MODEL='gemini-3-flash-preview';
+export const GEMINI_MODEL='gemini-3.6-flash';
 // Match CAD Tools' project/location names. Local Vertex config never reads GEMINI_API_KEY.
 export function configFromEnv(env={}){
  const config={project:(env.GOOGLE_CLOUD_PROJECT||env.VERTEX_PROJECT||'').trim(),location:(env.GOOGLE_CLOUD_LOCATION||'global').trim(),model:(env.VERTEX_MODEL||DEFAULT_MODEL).trim(),port:Number(env.RING_BACKEND_PORT||env.RING_PREVIEW_PORT||9393),credentialsFile:env.GOOGLE_APPLICATION_CREDENTIALS?path.resolve(PROJECT_ROOT,env.GOOGLE_APPLICATION_CREDENTIALS):undefined};

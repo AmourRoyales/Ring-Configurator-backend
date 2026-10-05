@@ -12,11 +12,18 @@ Add these environment variables for Production (and Preview, if used):
 
 | Variable | Value |
 | --- | --- |
-| `GEMINI_API_KEY` | Google AI Studio API key (server-side only) |
+| `GEMINI_API_KEY` | Google AI Studio API key from a Free Tier project (server-side only) |
 | `RING_ALLOWED_ORIGINS` | `https://www.jenidiam.com,https://jenidiam.com,https://gwahb1-hf.myshopify.com` |
-| `GEMINI_MODEL` | Optional; defaults to `gemini-3-flash-preview` |
+| `GEMINI_MODEL` | Optional; defaults to `gemini-3.6-flash` |
 
 Redeploy after changing variables.
+
+Gemini 3.6 Flash supports free input and output on Free Tier projects. The API key's
+project determines the billing tier; choosing this model does not downgrade a paid
+project. Check the project's active RPD, RPM and TPM limits in Google AI Studio.
+If Production already defines `GEMINI_MODEL`, set it to `gemini-3.6-flash` or
+remove it to use the default. A depleted prepaid project must be replaced with a
+Free Tier project's key for free operation. There is no paid model fallback.
 
 ## Endpoints
 
