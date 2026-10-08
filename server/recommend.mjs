@@ -26,19 +26,28 @@ export const RESPONSE_SCHEMA=object({
   })}
  })}
 });
-// `provider` only selects error wording: Vertex (local ADC) and the Gemini API (hosted) share this request format.
+// OpenRouter uses standard JSON Schema. Legacy Google's native schema remains
+// available to isolated transport tests, without changing frontend validation.
+function jsonSchema(schema){
+ const {propertyOrdering,...rest}=schema;
+ return {...rest,type:rest.type.toLowerCase(),...(rest.properties?{additionalProperties:false,properties:Object.fromEntries(Object.entries(rest.properties).map(([key,value])=>[key,jsonSchema(value)]))}:{}),...(rest.items?{items:jsonSchema(rest.items)}:{})};
+}
+export const OPENROUTER_RESPONSE_SCHEMA=jsonSchema(RESPONSE_SCHEMA);
+OPENROUTER_RESPONSE_SCHEMA.properties.version.enum=[1];
+OPENROUTER_RESPONSE_SCHEMA.properties.variations.items.properties.options.items.properties.key.enum=Object.keys(CATALOG);
 export async function recommend({text,signal,generate,reportFailure,provider='vertex'}){
  if(typeof text!=='string'||text.trim().length<15||text.length>4000)throw new RecommendationError('Please share between 15 and 4,000 characters about the ring you have in mind.',400);
  if(!generate)throw new RecommendationError('The design service is not configured yet. You can still use the specification journey.',503);
- const response=await generate({signal,body:{systemInstruction:{parts:[{text:SYSTEM_PROMPT}]},contents:[{role:'user',parts:[{text}]}],generationConfig:{responseMimeType:'application/json',responseSchema:RESPONSE_SCHEMA,thinkingConfig:{thinkingLevel:'MEDIUM'},maxOutputTokens:12288}}});
+ const body=provider==='openrouter'?{messages:[{role:'system',content:SYSTEM_PROMPT},{role:'user',content:text}],response_format:{type:'json_schema',json_schema:{name:'ring_recommendations',strict:true,schema:OPENROUTER_RESPONSE_SCHEMA}},max_tokens:8192,stream:false}:{systemInstruction:{parts:[{text:SYSTEM_PROMPT}]},contents:[{role:'user',parts:[{text}]}],generationConfig:{responseMimeType:'application/json',responseSchema:RESPONSE_SCHEMA,thinkingConfig:{thinkingLevel:'MEDIUM'},maxOutputTokens:12288}};
+ const response=await generate({signal,body});
  if(!response.ok){
   const failure=await providerFailure(response,provider);
   reportFailure?.(failure.diagnostic);
   throw new RecommendationError(failure.message,failure.diagnostic.category==='billing'?503:response.status===429?429:502);
  }
- const body=await response.json(),candidate=body.candidates?.[0];
- if(candidate?.finishReason!=='STOP')throw new RecommendationError('The design response was incomplete. Please try again with a little more detail.');
- const output=candidate.content?.parts?.filter(p=>!p.thought&&typeof p.text==='string').map(p=>p.text).join('');
+ const data=await response.json(),candidate=provider==='openrouter'?data.choices?.[0]:data.candidates?.[0];
+ if(data.error|| (provider==='openrouter'?candidate?.finish_reason!=='stop'||candidate?.message?.refusal:candidate?.finishReason!=='STOP'))throw new RecommendationError('The design response was incomplete. Please try again with a little more detail.');
+ const output=provider==='openrouter'?candidate.message?.content:candidate.content?.parts?.filter(p=>!p.thought&&typeof p.text==='string').map(p=>p.text).join('');
  let parsed;try{parsed=JSON.parse(output);validateRecommendations(parsed,text);}catch{throw new RecommendationError('The returned designs did not pass our compatibility checks. Your answers are saved here; please try again.');}
  // Only schema-validated data leaves the server. Provider diagnostics and credentials never do.
  return {version:1,variations:parsed.variations.map(v=>({title:v.title,summary:v.summary,options:v.options.map(o=>({key:o.key,values:o.values,reason:o.reason,evidence:o.evidence}))}))};

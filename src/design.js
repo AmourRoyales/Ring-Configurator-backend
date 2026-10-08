@@ -1,7 +1,7 @@
 export const FAMILY_LABELS={solitaire:'Solitaire',hidden:'Hidden-halo solitaire',halo:'Halo',three:'Three stone',eternity:'Full eternity',partial:'Half / ¾ eternity',toi:'Toi et Moi',cluster:'Cluster',bridal:'Bridal set',wedding:'Wedding / anniversary'};
 export const SHAPE_LABELS={round:'Round',oval:'Oval',cushion:'Cushion',princess:'Princess',emerald:'Emerald',radiant:'Radiant',pear:'Pear',marquise:'Marquise',asscher:'Asscher',heart:'Heart',baguette:'Straight baguette',tapered:'Tapered baguette',trillion:'Trillion',trapezoid:'Trapezoid',halfmoon:'Half moon',matching:'Matching centre'};
 export const MAIN_SHAPES=['round','oval','cushion','princess','emerald','radiant','pear','marquise','asscher','heart'];
-export const SIDE_SHAPES=['trapezoid','trillion','tapered','halfmoon','pear','oval','emerald','round','matching'];
+export const SIDE_SHAPES=['trapezoid','trillion','tapered','halfmoon','pear','marquise','oval','emerald','round','matching'];
 export const ETERNITY_SHAPES=['round','oval','princess','emerald','baguette'];
 export const RATIOS={round:[1],oval:[1.3,1.4,1.5],cushion:[1,1.1,1.2],princess:[1],emerald:[1.3,1.4,1.5],radiant:[1,1.2,1.3],pear:[1.45,1.55,1.7],marquise:[1.85,2,2.15],asscher:[1],heart:[.95,1]};
 export const PRONG_LABELS={four:'4 prongs',five:'5 prongs',six:'6 prongs',eight:'8 prongs'};
